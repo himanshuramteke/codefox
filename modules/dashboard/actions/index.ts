@@ -12,6 +12,7 @@ import prisma from "@/lib/db";
 import {
   ContributionCalendar,
   ContributionDay,
+  ContributionStats,
   ContributionWeek,
 } from "@/modules/github/interfaces";
 
@@ -69,6 +70,48 @@ export async function getDashboardStats() {
       totalRepos: 0,
       totalReviews: 0,
     };
+  }
+}
+
+export async function getContributionStats(): Promise<ContributionStats | null> {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user) {
+      throw new Error("Unauthorized");
+    }
+
+    const token = await getAccessToken();
+    const octokit = new Octokit({ auth: token });
+
+    //get users github username
+    const { data: user } = await octokit.rest.users.getAuthenticated();
+
+    const calendar: ContributionCalendar | null = await fetchUserContribution(
+      token,
+      user.login,
+    );
+    if (!calendar) {
+      return null;
+    }
+
+    const contributions = calendar.weeks.flatMap((week: ContributionWeek) =>
+      week.contributionDays.map((day: ContributionDay) => ({
+        date: day.date,
+        count: day.contributionCount,
+        level: Math.min(4, Math.floor(day.contributionCount / 3)),
+      })),
+    );
+
+    return {
+      contributions,
+      totalContributions: calendar.totalContributions,
+    };
+  } catch (error) {
+    console.error("Error fetching Contribution Stats", error);
+    return null;
   }
 }
 
