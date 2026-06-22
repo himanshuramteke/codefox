@@ -20,3 +20,12 @@ export interface ContributionQueryResponse {
     };
   } | null;
 }
+
+export interface ContributionStats {
+  contributions: {
+    date: string;
+    count: number;
+    level: number;
+  }[];
+  totalContributions: number;
+}
