@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { headers } from "next/headers";
 import { ContributionCalendar, ContributionQueryResponse } from "../interfaces";
+import { GithubRepository } from "@/modules/repository/types";
 
 /*
 get the access token of github
@@ -74,4 +75,24 @@ export const fetchUserContribution = async (
     console.error("Error fetching User contribution data", error);
     return null;
   }
+};
+
+//get repository
+
+export const getRepositories = async (
+  page: number = 1,
+  perPage: number = 10,
+): Promise<GithubRepository[]> => {
+  const token = await getAccessToken();
+  const octokit = new Octokit({ auth: token });
+
+  const { data } = await octokit.rest.repos.listForAuthenticatedUser({
+    sort: "updated",
+    direction: "desc",
+    visibility: "all",
+    per_page: perPage,
+    page: page,
+  });
+
+  return data;
 };
