@@ -15,12 +15,15 @@ import { ExternalLink, Search, Star } from "lucide-react";
 import { useRepositories } from "@/modules/repository/hooks/use-repositories";
 import { RepositoryListSkeleton } from "@/modules/repository/components/repository-skeleton";
 import { RepositoryWithConnection } from "../types";
+import { useConnectRepositories } from "../hooks/use-connectRepositories";
 
 export default function RepositoryUI() {
   const [searchQuery, setSearchQuery] = useState("");
   const [localConnectingId, setLocalConnectingId] = useState<number | null>(
     null,
   );
+
+  const { mutate: connectRepo } = useConnectRepositories();
 
   const {
     data,
@@ -65,7 +68,19 @@ export default function RepositoryUI() {
       repo.full_name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const handleConnect = async (repo: RepositoryWithConnection) => {};
+  const handleConnect = async (repo: RepositoryWithConnection) => {
+    setLocalConnectingId(repo.id);
+    connectRepo(
+      {
+        owner: repo.full_name.split("/")[0],
+        repo: repo.name,
+        githubId: repo.id,
+      },
+      {
+        onSettled: () => setLocalConnectingId(null),
+      },
+    );
+  };
 
   if (isLoading) {
     return (
