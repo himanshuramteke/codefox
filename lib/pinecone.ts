@@ -4,4 +4,4 @@ export const pincone = new Pinecone({
   apiKey: process.env.PINECONE_DB_API_KEY!,
 });
 
-export const pineconeIndex = pincone.index("codefox-vector-embeddings");
+export const pineconeIndex = pincone.index("codefox-custom-text-embedding");
