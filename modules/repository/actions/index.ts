@@ -8,6 +8,7 @@ import {
   getRepositories,
 } from "@/modules/github/lib/github-functions";
 import { RepositoryWithConnection } from "../types";
+import { inngest } from "@/inngest/client";
 
 export const fetchRepositories = async (
   page: number = 1,
@@ -74,7 +75,19 @@ export const connectRepository = async (
 
   //TODO: INCREMENT REPOSITORY COUNT FOR USAGE TRACKING
 
-  //TODO: TRIGGER REPOSITORY INDEXING FOR RAG(FIRE AND FORGET)
+  //TRIGGER REPOSITORY INDEXING FOR RAG(FIRE AND FORGET)
+  try {
+    await inngest.send({
+      name: "repository.connected",
+      data: {
+        owner,
+        repo,
+        userId: session.user.id,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to trigger repository indexing", error);
+  }
 
   return webhook;
 };
